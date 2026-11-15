@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cozinha no Lucro: a planilha que calcula o preço certo da sua comida caseira</title>
+<meta name="description" content="Descubra quanto sobra de verdade em cada marmita, bolo ou molho. Planilha pronta com preço certo por canal, controle de vendas, fiado e lista de compras.">
+<meta property="og:title" content="Cozinha no Lucro">
+<meta property="og:description" content="A planilha que calcula o preço certo da sua comida caseira, com gás, embalagem, taxa do app e o seu tempo.">
+<meta property="og:image" content="assets/og-capa.png">
+<meta name="theme-color" content="#1F3D33">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO: troque só o que está aqui dentro
+   ===================================================================== */
+window.CONFIG = {
+  CHECKOUT_URL: "COLE_AQUI_O_LINK_DO_CHECKOUT_KIWIFY",   // oferta de lançamento (R$ 27)
+  CHECKOUT_URL_DEPOIS: "",                               // link da oferta de R$ 37 (deixe vazio para usar o mesmo)
+  PIXEL_ID: "COLE_AQUI_O_ID_DO_PIXEL",                   // Gerenciador de Eventos do Meta (só números)
+  EMAIL_SUPORTE: "seuemail@exemplo.com",
+  WHATSAPP: "",                                          // ex.: "5547999999999" (com 55 e DDD). Vazio = botão escondido
+
+  PRECO_LANCAMENTO: 27,
+  PRECO_DEPOIS: 37,
+  FIM_LANCAMENTO: "2026-11-30T23:59:00-03:00",           // data e hora REAIS em que o preço sobe
+
+  // Depoimentos REAIS, com autorização da pessoa. Enquanto estiver vazio, a seção fica escondida.
+  // Exemplo de formato: { texto: "...", nome: "Ana", negocio: "Marmitas da Ana, Joinville" }
+  DEPOIMENTOS: []
+};
+</script>
+
+<script>
+/* Pixel do Meta: só carrega quando o ID estiver preenchido */
+(function () {
+  var id = (window.CONFIG.PIXEL_ID || "").trim();
+  if (!/^\d{10,20}$/.test(id)) { window.fbq = function () {}; return; }
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', id);
+  fbq('track', 'PageView');
+})();
+</script>
+
+<style>
+:root {
+  --panela: #1F3D33;
+  --panela-2: #2C5446;
+  --chama: #F26B21;
+  --chama-esc: #D4561A;
+  --gema: #FFC93C;
+  --salsa: #E9F1EC;
+  --tinta: #17201C;
+  --cinza: #5C6B64;
+  --prejuizo: #D23B2C;
+  --papel: #FFFEF9;
+  --raio: 14px;
+  --display: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+  --corpo: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+  --comanda: "Courier Prime", "Courier New", monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--corpo);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--tinta);
+  background: var(--salsa);
+  -webkit-font-smoothing: antialiased;
+}
+img, video { max-width: 100%; display: block; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gema); outline-offset: 3px; border-radius: 6px; }
+
+.wrap { width: min(1080px, 100% - 40px); margin-inline: auto; }
+.texto { max-width: 34em; }
+
+h1, h2, h3 { font-family: var(--display); line-height: 1.08; margin: 0; letter-spacing: -0.02em; }
+h1 { font-size: clamp(2.3rem, 6.2vw, 4.1rem); font-weight: 800; }
+h2 { font-size: clamp(1.75rem, 4.2vw, 2.7rem); font-weight: 800; }
+h3 { font-size: 1.3rem; font-weight: 800; }
+p { margin: 0; }
+
+/* ---------- botão ---------- */
+.botao {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5em;
+  background: var(--chama); color: #fff; text-decoration: none;
+  font-family: var(--display); font-weight: 800; font-size: 1.15rem;
+  padding: 1.05em 1.6em; border-radius: 999px;
+  box-shadow: 0 6px 0 var(--chama-esc);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.botao:hover { transform: translateY(2px); box-shadow: 0 4px 0 var(--chama-esc); }
+.botao:active { transform: translateY(6px); box-shadow: 0 0 0 var(--chama-esc); }
+.nota-botao { font-size: .92rem; color: var(--cinza); margin-top: 1rem; }
+
+/* ---------- topo ---------- */
+.topo { background: var(--panela); color: #fff; padding: 22px 0 72px; overflow: hidden; }
+.marca { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 1.1rem; }
+.marca img { width: 34px; height: 34px; border-radius: 9px; }
+.topo-grade { display: grid; gap: 48px; align-items: center; margin-top: 48px; }
+.topo h1 { max-width: 12em; }
+.topo .sub { font-size: 1.2rem; color: #CFE0D7; margin: 22px 0 32px; max-width: 30em; }
+.topo .nota-botao { color: #A9C4B7; }
+
+/* ---------- comanda (o elemento marcante) ---------- */
+.comanda {
+  font-family: var(--comanda); color: #222;
+  background: var(--papel);
+  width: min(370px, 100%); justify-self: center;
+  padding: 26px 24px 30px; position: relative;
+  transform: rotate(2deg);
+  box-shadow: 0 24px 50px rgba(0,0,0,.35);
+  --dente: radial-gradient(circle at 8px 0, transparent 7px, var(--papel) 7.5px) 0 0 / 16px 100%;
+}
+.comanda::before, .comanda::after {
+  content: ""; position: absolute; left: 0; right: 0; height: 10px;
+  background: radial-gradient(circle at 8px 10px, var(--panela) 7px, transparent 7.5px) 0 0 / 16px 10px repeat-x;
+}
+.comanda::before { top: -1px; }
+.comanda::after { bottom: -1px; transform: scaleY(-1); }
+.comanda .cab { text-align: center; border-bottom: 2px dashed #bbb; padding-bottom: 12px; margin-bottom: 12px; }
+.comanda .cab strong { display: block; font-size: 1.15rem; }
+.comanda .cab span { font-size: .85rem; color: #666; }
+.linha { display: flex; justify-content: space-between; gap: 12px; font-size: .98rem; padding: 4px 0; }
+.linha.menos b { color: var(--prejuizo); }
+.linha.preco { font-weight: 700; font-size: 1.05rem; }
+.total { border-top: 2px dashed #bbb; margin-top: 10px; padding-top: 12px; display: flex; justify-content: space-between; align-items: baseline; }
+.total span { font-weight: 700; }
+.total b { font-size: 2rem; color: var(--prejuizo); }
+.carimbo {
+  margin: 18px auto 0; width: fit-content; transform: rotate(-6deg);
+  border: 3px solid var(--panela-2); color: var(--panela-2); border-radius: 8px;
+  padding: 6px 12px; font-weight: 700; text-align: center; line-height: 1.25;
+}
+.carimbo b { display: block; font-size: 1.35rem; }
+
+/* impressão da comanda: o único movimento automático da página */
+@media (prefers-reduced-motion: no-preference) {
+  .comanda .imprime { opacity: 0; animation: imprime .35s ease-out forwards; }
+  .comanda .imprime:nth-child(1) { animation-delay: .25s; }
+  .comanda .imprime:nth-child(2) { animation-delay: .55s; }
+  .comanda .imprime:nth-child(3) { animation-delay: .8s; }
+  .comanda .imprime:nth-child(4) { animation-delay: 1.05s; }
+  .comanda .imprime:nth-child(5) { animation-delay: 1.3s; }
+  .comanda .imprime:nth-child(6) { animation-delay: 1.55s; }
+  .comanda .total.imprime { animation-delay: 2s; }
+  .comanda .carimbo.imprime { animation: carimba .3s cubic-bezier(.2,1.6,.4,1) 2.7s forwards; }
+  @keyframes imprime { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  @keyframes carimba { from { opacity: 0; transform: rotate(-6deg) scale(1.8); } to { opacity: 1; transform: rotate(-6deg) scale(1); } }
+}
+
+/* ---------- seções ---------- */
+.secao { padding: 84px 0; }
+.secao > .wrap > h2 { max-width: 16em; }
+.secao .intro { color: var(--cinza); font-size: 1.15rem; margin-top: 14px; max-width: 32em; }
+
+.video-grade { display: grid; gap: 40px; align-items: center; }
+.video-grade > div, .topo-grade > div, .oferta-caixa > div { min-width: 0; }
+.celular {
+  width: min(300px, 80vw); justify-self: center;
+  border: 10px solid var(--tinta); border-radius: 34px; overflow: hidden;
+  background: var(--tinta); aspect-ratio: 9 / 16;
+}
+.celular video { width: 100%; height: 100%; object-fit: cover; }
+
+.recurso { display: grid; gap: 22px; align-items: center; padding: 44px 0; border-top: 1px solid #CBDAD1; }
+.recurso:first-of-type { border-top: 0; }
+.recurso > div { min-width: 0; }
+.recurso p { color: var(--cinza); margin-top: 10px; }
+.tela {
+  background: #fff; border-radius: var(--raio); padding: 10px;
+  box-shadow: 0 1px 0 #CBDAD1, 0 14px 30px rgba(31,61,51,.12);
+  overflow-x: auto;
+}
+.tela img { max-width: none; width: 100%; min-width: 520px; border-radius: 6px; }
+.tela.estreita img { min-width: 0; }
+.legenda { font-size: .85rem; color: var(--cinza); margin-top: 8px; }
+.arraste { display: inline; }
+@media (min-width: 860px) { .arraste { display: none; } .tela img { min-width: 0 !important; } }
+
+.comidas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; padding: 0; list-style: none; }
+.comidas li { background: #fff; border: 2px solid var(--panela); border-radius: 999px; padding: 8px 16px; font-weight: 600; }
+
+.lista-abas { columns: 2 240px; column-gap: 40px; margin: 28px 0 0; padding: 0; list-style: none; }
+.lista-abas li { break-inside: avoid; padding: 10px 0 10px 30px; position: relative; border-bottom: 1px solid #CBDAD1; }
+.lista-abas li::before {
+  content: ""; position: absolute; left: 2px; top: 16px; width: 14px; height: 8px;
+  border-left: 3px solid var(--panela-2); border-bottom: 3px solid var(--panela-2); transform: rotate(-45deg);
+}
+.lista-abas b { font-weight: 800; }
+
+/* ---------- oferta ---------- */
+.oferta { background: var(--panela); color: #fff; }
+.oferta-caixa { display: grid; gap: 36px; align-items: center; }
+.preco { font-family: var(--display); font-weight: 800; font-size: clamp(4rem, 13vw, 6.5rem); line-height: 1; letter-spacing: -0.04em; }
+.preco small { font-size: .32em; letter-spacing: 0; vertical-align: .9em; margin-right: .1em; }
+.oferta .comparacao { color: #CFE0D7; font-size: 1.15rem; margin: 12px 0 28px; }
+.garantia { display: flex; gap: 16px; align-items: flex-start; background: var(--panela-2); border-radius: var(--raio); padding: 22px; }
+.selo {
+  flex: none; width: 74px; height: 74px; border-radius: 50%; background: var(--gema); color: var(--tinta);
+  display: grid; place-items: center; text-align: center; font-weight: 800; line-height: 1; font-size: .78rem;
+}
+.selo b { display: block; font-size: 1.7rem; }
+.garantia p { color: #CFE0D7; margin-top: 6px; }
+
+/* ---------- perguntas ---------- */
+.perguntas details { border-bottom: 1px solid #CBDAD1; }
+.perguntas summary {
+  cursor: pointer; list-style: none; padding: 20px 36px 20px 0; position: relative;
+  font-family: var(--display); font-weight: 600; font-size: 1.15rem;
+}
+.perguntas summary::-webkit-details-marker { display: none; }
+.perguntas summary::after { content: "+"; position: absolute; right: 4px; top: 14px; font-size: 1.6rem; color: var(--chama); transition: transform .2s; }
+.perguntas details[open] summary::after { transform: rotate(45deg); }
+.perguntas details p { padding: 0 0 20px; color: var(--cinza); max-width: 36em; }
+.perguntas .wrap { max-width: 760px; }
+
+.final { text-align: center; }
+.final h2 { margin-inline: auto; }
+.final .intro { margin-inline: auto; }
+.final .botao { margin-top: 28px; }
+
+footer { padding: 40px 0 120px; font-size: .9rem; color: var(--cinza); border-top: 1px solid #CBDAD1; }
+footer p + p { margin-top: 8px; }
+
+/* barra fixa no celular */
+.barra {
+  position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--tinta); color: #fff; border-radius: 999px; padding: 8px 8px 8px 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.3);
+  transform: translateY(140%); transition: transform .25s ease;
+}
+.barra.visivel { transform: none; }
+.barra span { font-weight: 700; }
+.barra .botao { font-size: 1rem; padding: .75em 1.2em; box-shadow: none; }
+
+@media (min-width: 860px) {
+  .topo-grade { grid-template-columns: 1.15fr .85fr; }
+  .video-grade { grid-template-columns: .8fr 1.2fr; }
+  .recurso { grid-template-columns: .8fr 1.2fr; gap: 48px; }
+  .recurso.inverte > :first-child { order: 2; }
+  .oferta-caixa { grid-template-columns: 1fr 1fr; }
+  .barra { display: none; }
+  footer { padding-bottom: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .barra { transition: none; }
+}
+
+/* ---------- faixa de lançamento (topo) ---------- */
+.faixa {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--gema); color: var(--tinta);
+  font-weight: 600; font-size: .95rem; text-align: center;
+  padding: 9px 16px; line-height: 1.35;
+}
+.faixa b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.faixa.final { background: var(--prejuizo); color: #fff; }
+@media (prefers-reduced-motion: no-preference) {
+  .faixa.minutos { animation: pisca 1s ease-in-out infinite alternate; }
+  @keyframes pisca { from { background: var(--prejuizo); } to { background: #A82418; } }
+}
+.oculto { display: none !important; }
+
+.garantia-linha { font-size: .9rem; margin-top: 10px; display: flex; gap: 8px; align-items: center; }
+.garantia-linha::before {
+  content: ""; flex: none; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--gema) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3 3 7-7' stroke='%2317201C' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat;
+}
+.topo .garantia-linha, .oferta .garantia-linha { color: #CFE0D7; }
+.final .garantia-linha { justify-content: center; color: var(--cinza); }
+
+.selo-lanc {
+  display: inline-block; margin-bottom: 18px; padding: 6px 14px; border-radius: 999px;
+  background: var(--gema); color: var(--tinta); font-weight: 700; font-size: .95rem;
+}
+
+/* ---------- calculadora ---------- */
+.calc { background: #fff; }
+.calc-grade { display: grid; gap: 36px; margin-top: 32px; align-items: start; }
+.campos { display: grid; gap: 18px; }
+.campo label { display: block; font-weight: 600; margin-bottom: 6px; }
+.campo small { display: block; color: var(--cinza); font-size: .85rem; margin-top: 4px; }
+.campo input, .campo select {
+  width: 100%; font: inherit; font-size: 1.15rem; padding: 12px 14px;
+  border: 2px solid #C9D8CF; border-radius: 12px; background: #FFFDF2;
+}
+.campo input:focus, .campo select:focus { outline: none; border-color: var(--panela-2); box-shadow: 0 0 0 3px rgba(44,84,70,.18); }
+.prefixo { position: relative; }
+.prefixo span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--cinza); font-weight: 600; }
+.prefixo input { padding-left: 44px; }
+.resultado {
+  background: var(--panela); color: #fff; border-radius: var(--raio); padding: 28px;
+  position: sticky; top: 70px;
+}
+.resultado .rotulo { color: #A9C4B7; font-size: .95rem; }
+.resultado .valor { font-family: var(--display); font-weight: 800; font-size: clamp(2.6rem, 8vw, 3.6rem); line-height: 1.05; margin: 4px 0 6px; font-variant-numeric: tabular-nums; }
+.resultado .valor.ruim { color: #FF8A7A; }
+.resultado .valor.bom { color: #7EE2A8; }
+.resultado .msg { color: #E3EEE8; margin-bottom: 22px; }
+.resultado .certo { border-top: 1px solid rgba(255,255,255,.18); padding-top: 18px; margin-bottom: 22px; }
+.resultado .certo b { font-family: var(--display); font-size: 1.9rem; color: var(--gema); }
+.resultado .aviso { font-size: .8rem; color: #A9C4B7; margin-top: 14px; }
+
+/* ---------- simulações ---------- */
+.sims { display: grid; gap: 18px; margin-top: 32px; }
+.sim { background: #fff; border-radius: var(--raio); padding: 24px; border: 2px solid #CBDAD1; }
+.sim h3 { font-size: 1.15rem; }
+.sim .antes-depois { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 14px 0 8px; font-family: var(--display); }
+.sim .antes { font-size: 1.4rem; color: var(--cinza); text-decoration: line-through; text-decoration-color: var(--prejuizo); }
+.sim .depois { font-size: 2rem; font-weight: 800; color: var(--panela-2); }
+.sim p { color: var(--cinza); }
+.sim .ganho { display: inline-block; margin-top: 12px; background: var(--gema); padding: 4px 12px; border-radius: 8px; font-weight: 700; color: var(--tinta); }
+.nota-sim { font-size: .85rem; color: var(--cinza); margin-top: 16px; }
+
+/* ---------- bônus ---------- */
+.bonus-grade { display: grid; gap: 36px; align-items: center; }
+.bonus-grade img { border-radius: var(--raio); }
+.bonus-lista { margin: 20px 0 0; padding: 0; list-style: none; }
+.bonus-lista li { padding: 8px 0 8px 28px; position: relative; }
+.bonus-lista li::before { content: ""; position: absolute; left: 0; top: 15px; width: 12px; height: 12px; border-radius: 3px; background: var(--chama); }
+
+/* ---------- depoimentos (aparecem só quando houver reais) ---------- */
+.depos { display: grid; gap: 18px; margin-top: 28px; }
+.depo { background: #fff; border-radius: var(--raio); padding: 24px; border: 2px solid #CBDAD1; }
+.depo p { font-size: 1.1rem; }
+.depo footer { border: 0; padding: 12px 0 0; font-weight: 700; color: var(--tinta); }
+.depo footer span { font-weight: 400; color: var(--cinza); }
+
+/* oferta */
+.inclui { margin: 6px 0 24px; padding: 0; list-style: none; color: #E3EEE8; }
+.inclui li { padding: 4px 0 4px 26px; position: relative; }
+.inclui li::before { content: ""; position: absolute; left: 2px; top: 11px; width: 13px; height: 7px; border-left: 3px solid var(--gema); border-bottom: 3px solid var(--gema); transform: rotate(-45deg); }
+.depois-preco { color: var(--gema); font-weight: 600; margin-top: 6px; }
+.contador-grande { display: flex; gap: 10px; margin: 18px 0 26px; }
+.contador-grande div { background: var(--panela-2); border-radius: 12px; padding: 10px 0; width: 70px; text-align: center; }
+.contador-grande b { display: block; font-family: var(--display); font-size: 1.8rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.contador-grande span { font-size: .75rem; color: #A9C4B7; }
+
+.zap {
+  display: inline-flex; align-items: center; gap: 10px; margin-top: 28px;
+  border: 2px solid var(--panela-2); color: var(--panela-2); text-decoration: none; font-weight: 700;
+  padding: 12px 20px; border-radius: 999px;
+}
+.zap:hover { background: var(--panela-2); color: #fff; }
+
+@media (min-width: 860px) {
+  .calc-grade { grid-template-columns: 1fr 1fr; gap: 56px; }
+  .sims { grid-template-columns: repeat(3, 1fr); }
+  .bonus-grade { grid-template-columns: 1.1fr .9fr; }
+  .depos { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="faixa" id="faixa" role="status">Preço de lançamento: <span data-preco>R$ 27</span> + kit de bônus grátis. Termina em <b data-contador>--</b></div>
+
+<header class="topo">
+  <div class="wrap">
+    <div class="marca"><img src="assets/icone-192.png" alt="">Cozinha no Lucro</div>
+
+    <div class="topo-grade">
+      <div>
+        <h1>Você cobra R$ 18 na marmita. Quanto sobra pra você?</h1>
+        <p class="sub">A Cozinha no Lucro faz a conta completa, com gás, embalagem, taxa do app e o seu tempo, e mostra o preço certo de cada prato em cada canal de venda.</p>
+        <a class="botao" data-checkout href="#oferta"><span data-cta>Quero a planilha + kit por R$ 27</span></a>
+        <p class="garantia-linha">7 dias de garantia: não serviu, você recebe o dinheiro de volta.</p>
+      </div>
+
+      <div class="comanda" aria-label="Exemplo de conta de uma marmita vendida por R$ 18 em app de delivery">
+        <div class="cab"><strong>Marmita de frango</strong><span>vendida no app de delivery</span></div>
+        <div>
+          <div class="linha preco imprime"><span>Preço cobrado</span><b>R$ 18,00</b></div>
+          <div class="linha menos imprime"><span>Taxa do app (26,2%)</span><b>−4,72</b></div>
+          <div class="linha menos imprime"><span>Ingredientes e embalagem</span><b>−5,11</b></div>
+          <div class="linha menos imprime"><span>Seu tempo (12 min)</span><b>−5,00</b></div>
+          <div class="linha menos imprime"><span>MEI, internet, celular</span><b>−0,81</b></div>
+          <div class="linha menos imprime"><span>Gás</span><b>−0,30</b></div>
+        </div>
+        <div class="total imprime"><span>Sobra de lucro</span><b>R$ 2,06</b></div>
+        <div class="carimbo imprime">Preço certo<b>R$ 20,86</b></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="secao calc" id="calculadora">
+    <div class="wrap">
+      <h2>Faça a conta do seu prato agora</h2>
+      <p class="intro">Coloque os seus números. É uma versão rápida da conta que a planilha faz com todos os seus custos.</p>
+
+      <div class="calc-grade">
+        <form class="campos" id="calc" onsubmit="return false">
+          <div class="campo">
+            <label for="c-preco">Quanto você cobra por unidade?</label>
+            <div class="prefixo"><span>R$</span><input id="c-preco" inputmode="decimal" value="18,00"></div>
+          </div>
+          <div class="campo">
+            <label for="c-ingr">Quanto gasta de ingredientes e embalagem por unidade?</label>
+            <div class="prefixo"><span>R$</span><input id="c-ingr" inputmode="decimal" value="5,11"></div>
+            <small>Se não souber, chute por cima. A planilha calcula isso certinho para você.</small>
+          </div>
+          <div class="campo">
+            <label for="c-min">Quantos minutos de trabalho por unidade?</label>
+            <input id="c-min" inputmode="numeric" value="12">
+            <small>Tempo de preparo, embalagem e entrega dividido pela quantidade que você faz.</small>
+          </div>
+          <div class="campo">
+            <label for="c-hora">Quanto vale uma hora do seu trabalho?</label>
+            <div class="prefixo"><span>R$</span><input id="c-hora" inputmode="decimal" value="25,00"></div>
+          </div>
+          <div class="campo">
+            <label for="c-canal">Onde você mais vende?</label>
+            <select id="c-canal">
+              <option value="0">Pix ou dinheiro</option>
+              <option value="0.035">Cartão de crédito na maquininha</option>
+              <option value="0.152">App de delivery, com entrega sua</option>
+              <option value="0.262" selected>App de delivery, com entrega do app</option>
+            </select>
+          </div>
+        </form>
+
+        <div class="resultado" aria-live="polite">
+          <p class="rotulo">Sobra de lucro por unidade, depois de pagar o seu tempo</p>
+          <p class="valor" id="r-lucro">R$ 2,06</p>
+          <p class="msg" id="r-msg"></p>
+          <div class="certo">
+            <p class="rotulo">Preço certo para ter 20% de lucro</p>
+            <b id="r-certo">R$ 20,86</b>
+            <p class="msg" id="r-dif" style="margin:6px 0 0"></p>
+          </div>
+          <a class="botao" data-checkout href="#oferta"><span data-cta>Quero a planilha + kit por R$ 27</span></a>
+          <p class="aviso">Conta simplificada: soma R$ 1,11 por unidade de gás e custos do mês (MEI, internet, celular). Na planilha você coloca os seus valores reais.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <div class="wrap video-grade">
+      <div class="celular">
+        <video src="assets/video-publi.mp4" poster="assets/video-poster.jpg" controls playsinline muted loop preload="metadata"></video>
+      </div>
+      <div>
+        <h2>Faturar bem não é o mesmo que lucrar</h2>
+        <p class="intro">Quem vende comida feita em casa costuma calcular o preço pelos ingredientes e multiplicar por dois. Nessa conta ficam de fora o gás, a embalagem, a taxa do app, os custos do mês e as horas na cozinha. No fim do mês o dinheiro entrou, mas quase nada ficou.</p>
+        <p class="intro">A planilha separa cada um desses custos e mostra, prato por prato, quanto sobra de verdade.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao" style="padding-top:0">
+    <div class="wrap">
+      <h2>O que muda quando você cobra o preço certo</h2>
+      <div class="sims">
+        <article class="sim">
+          <h3>Marmita vendida no app de delivery</h3>
+          <div class="antes-depois"><span class="antes">R$ 18,00</span><span class="depois">R$ 20,86</span></div>
+          <p>O preço certo cobre a taxa do app, os custos e o seu tempo, e ainda deixa 20% de lucro.</p>
+          <span class="ganho">+R$ 422 por mês em 200 marmitas</span>
+        </article>
+        <article class="sim">
+          <h3>Frango e arroz subiram 10%</h3>
+          <div class="antes-depois"><span class="antes">R$ 20,86</span><span class="depois">R$ 21,81</span></div>
+          <p>Sem perceber, o lucro da marmita de R$ 18 cairia de R$ 2,06 para R$ 1,55. A planilha avisa e recalcula o preço.</p>
+          <span class="ganho">Alerta de aumento no painel</span>
+        </article>
+        <article class="sim">
+          <h3>Combo com 10% de desconto</h3>
+          <div class="antes-depois"><span class="antes">R$ 105,00</span><span class="depois">R$ 94,50</span></div>
+          <p>Cinco marmitas e um molho, vendidos no WhatsApp. Mesmo com desconto, o combo ainda deixa lucro, e a planilha mostra até onde dá para baixar.</p>
+          <span class="ganho">Lucro de R$ 29,19 no combo</span>
+        </article>
+      </div>
+      <p class="nota-sim">Simulações com os números de exemplo que vêm na planilha. O seu resultado depende dos seus custos, preços e vendas.</p>
+
+      <div id="depoimentos" class="oculto" style="margin-top:72px">
+        <h2>Quem já usa</h2>
+        <div class="depos" id="lista-depos"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao" style="padding-top:0">
+    <div class="wrap">
+      <h2>O que a planilha faz por você</h2>
+
+      <div class="recurso">
+        <div>
+          <h3>Mostra o preço certo de cada prato</h3>
+          <p>Você cadastra a receita uma vez. A planilha soma ingredientes, embalagem, gás, energia, seu tempo e os custos do mês, e calcula o preço para o Pix, o cartão e cada app de delivery.</p>
+        </div>
+        <div>
+          <div class="tela"><img style="min-width:670px" src="assets/print-precificacao.jpg" alt="Tela de precificação com custo total, preço sugerido e situação de cada produto" loading="lazy"></div>
+          <p class="legenda">Aba Precificação, com os produtos de exemplo que vêm na planilha. <span class="arraste">Arraste a imagem para o lado para ver tudo.</span></p>
+        </div>
+      </div>
+
+      <div class="recurso inverte">
+        <div>
+          <h3>Mostra o mês inteiro numa tela</h3>
+          <p>Faturamento, lucro, quanto ficou no seu bolso e o dinheiro de verdade no caixa. Também avisa quando um produto dá prejuízo ou quando um ingrediente subiu de preço.</p>
+        </div>
+        <div>
+          <div class="tela"><img style="min-width:760px" src="assets/print-painel-topo.jpg" alt="Painel do mês com faturamento, lucro, caixa, fiado e alertas" loading="lazy"></div>
+          <p class="legenda">Aba Painel. <span class="arraste">Arraste a imagem para o lado para ver tudo.</span></p>
+        </div>
+      </div>
+
+      <div class="recurso">
+        <div>
+          <h3>Cobra o fiado com um clique</h3>
+          <p>Cada cliente fica cadastrado com quanto comprou e quanto deve. O botão “Cobrar” abre o WhatsApp com a mensagem pronta e o valor certo. O botão “Chamar” traz de volta quem sumiu.</p>
+        </div>
+        <div>
+          <div class="tela"><img style="min-width:760px" src="assets/print-clientes.jpg" alt="Lista de clientes com fiado em aberto e botões para chamar e cobrar no WhatsApp" loading="lazy"></div>
+          <p class="legenda">Aba Clientes. <span class="arraste">Arraste a imagem para o lado para ver tudo.</span></p>
+        </div>
+      </div>
+
+      <div class="recurso inverte">
+        <div>
+          <h3>Monta a lista de compras sozinha</h3>
+          <p>Diga quanto vai produzir na semana. A planilha calcula quanto de cada ingrediente você precisa, quantos pacotes comprar e quanto vai gastar no mercado.</p>
+        </div>
+        <div>
+          <div class="tela estreita"><img src="assets/print-compras.jpg" alt="Lista de compras com quantidade necessária, pacotes a comprar e custo total de R$ 475" loading="lazy"></div>
+          <p class="legenda">Aba Produção e Compras.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao" style="background:#fff" data-bonus>
+    <div class="wrap bonus-grade">
+      <div>
+        <span class="selo-lanc">Bônus de lançamento, grátis até <span data-prazo>30/11</span></span>
+        <h2>Kit Cardápio e Etiquetas</h2>
+        <p class="intro">Modelos prontos para você divulgar e embalar com cara de profissional. É só trocar o nome do seu negócio, os pratos e os preços.</p>
+        <ul class="bonus-lista">
+          <li>Cardápio da semana para imprimir ou mandar no WhatsApp</li>
+          <li>Etiquetas para marmitas e etiquetas redondas para potes</li>
+          <li>Tabela de preços para os stories</li>
+          <li>Post “Hoje tem” para o feed</li>
+          <li>Cartão fidelidade</li>
+        </ul>
+        <p class="nota-botao">Cada modelo em duas cores. Abre no PowerPoint e no Google Apresentações, e pode ser importado no Canva.</p>
+      </div>
+      <img src="assets/bonus-kit.jpg" alt="Modelos do kit: etiquetas redondas, cardápio da semana e tabela de preços" loading="lazy">
+    </div>
+  </section>
+
+  <section class="secao" style="background:#fff;padding-top:0">
+    <div class="wrap">
+      <h2>Feita para quem vende comida feita em casa</h2>
+      <p class="intro">Serve para qualquer receita que você vende por unidade, porção ou pote.</p>
+      <ul class="comidas">
+        <li>Marmitas</li><li>Bolos e doces</li><li>Salgados</li><li>Congelados</li>
+        <li>Molhos e temperos</li><li>Pães</li><li>Lanches</li><li>Comida por encomenda</li>
+      </ul>
+
+      <h2 style="margin-top:72px">Tudo o que vem na planilha</h2>
+      <ul class="lista-abas">
+        <li><b>Precificação</b>: preço certo e preço mínimo de cada produto</li>
+        <li><b>Ficha técnica</b>: o custo de cada receita, ingrediente por ingrediente</li>
+        <li><b>Painel</b>: lucro, caixa, fiado e alertas do mês</li>
+        <li><b>Vendas</b>: cada venda com o lucro calculado na hora</li>
+        <li><b>Clientes</b>: fiado, aniversários e mensagens prontas no WhatsApp</li>
+        <li><b>Despesas</b>: o que saiu do bolso, por categoria</li>
+        <li><b>Produção e compras</b>: lista de compras automática</li>
+        <li><b>Combos e promoções</b>: o desconto máximo sem prejuízo</li>
+        <li><b>Simulador</b>: quantas vendas para bater sua meta</li>
+        <li><b>Evolução anual</b>: mês a mês, com gráfico</li>
+        <li><b>Tabela de preços</b>: pronta para imprimir ou mandar no WhatsApp</li>
+        <li><b>Guia de uso</b>: passo a passo para preencher</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="secao oferta" id="oferta">
+    <div class="wrap oferta-caixa">
+      <div>
+        <span class="selo-lanc" data-bonus>Preço de lançamento</span>
+        <h2>Cozinha no Lucro</h2>
+        <p class="preco"><small>R$</small><span data-preco-num>27</span></p>
+        <p class="depois-preco" data-bonus>Depois de <span data-prazo>30/11</span>, o preço passa para <span data-preco-depois>R$ 37</span>.</p>
+        <ul class="inclui" style="margin-top:20px">
+          <li>Planilha Cozinha no Lucro completa</li>
+          <li>Guia de uso passo a passo</li>
+          <li data-bonus>Bônus: Kit Cardápio e Etiquetas</li>
+          <li>Pagamento único, sem mensalidade</li>
+        </ul>
+        <div class="contador-grande" data-bonus aria-label="Tempo restante do preço de lançamento">
+          <div><b data-cd="d">--</b><span>dias</span></div>
+          <div><b data-cd="h">--</b><span>horas</span></div>
+          <div><b data-cd="m">--</b><span>min</span></div>
+          <div><b data-cd="s">--</b><span>seg</span></div>
+        </div>
+        <a class="botao" data-checkout href="#oferta"><span data-cta>Quero a planilha + kit por R$ 27</span></a>
+        <p class="garantia-linha">7 dias de garantia: não serviu, você recebe o dinheiro de volta.</p>
+        <p class="nota-botao" style="color:#A9C4B7">Compra segura pela Kiwify, no cartão ou no Pix. Acesso imediato depois do pagamento.</p>
+      </div>
+      <div class="garantia">
+        <div class="selo"><span><b>7</b>dias</span></div>
+        <div>
+          <h3>Garantia de 7 dias</h3>
+          <p>Se a planilha não servir para você, peça o reembolso em até 7 dias pela própria Kiwify e receba o valor de volta.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao perguntas">
+    <div class="wrap">
+      <h2>Perguntas frequentes</h2>
+      <div style="margin-top:24px">
+        <details>
+          <summary>Preciso saber mexer em Excel?</summary>
+          <p>Não. Você só preenche as células amarelas, e o resto a planilha calcula. Ela já vem com exemplos preenchidos e uma aba explicando o passo a passo.</p>
+        </details>
+        <details>
+          <summary>Em qual programa funciona?</summary>
+          <p>No Excel 2019 ou mais novo, no Microsoft 365 e no app gratuito do Excel no celular. Também abre no LibreOffice, que é gratuito.</p>
+        </details>
+        <details>
+          <summary>Como eu recebo a planilha e o kit?</summary>
+          <p>Logo depois do pagamento aprovado você recebe um e-mail da Kiwify com o acesso. É só entrar e baixar os arquivos.</p>
+        </details>
+        <details>
+          <summary>É assinatura?</summary>
+          <p>Não. Você paga uma vez e a planilha é sua para usar quanto quiser.</p>
+        </details>
+        <details>
+          <summary>Serve se eu vendo bolo, doce ou salgado?</summary>
+          <p>Sim. Você cadastra as suas próprias receitas e ingredientes. Marmita é só o exemplo que vem preenchido.</p>
+        </details>
+        <details>
+          <summary>E se eu não gostar?</summary>
+          <p>Você tem 7 dias para pedir o reembolso pela Kiwify, sem precisar explicar o motivo.</p>
+        </details>
+      </div>
+      <a class="zap oculto" id="zap" href="#" target="_blank" rel="noopener">Ainda com dúvida? Fale com a gente no WhatsApp</a>
+    </div>
+  </section>
+
+  <section class="secao final" style="padding-top:20px">
+    <div class="wrap">
+      <h2>Comece a cobrar o preço certo ainda hoje</h2>
+      <p class="intro">Em 15 minutos você cadastra seus pratos e descobre quanto cada um deixa de verdade.</p>
+      <a class="botao" data-checkout href="#oferta"><span data-cta>Quero a planilha + kit por R$ 27</span></a>
+      <p class="garantia-linha">7 dias de garantia: não serviu, você recebe o dinheiro de volta.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Cozinha no Lucro. Dúvidas: <a data-email href="#">e-mail de suporte</a>.</p>
+    <p>Os valores mostrados são exemplos que vêm na planilha. O resultado de cada negócio depende dos seus próprios custos e preços.</p>
+    <p>Esta página usa o Pixel do Meta para medir o resultado dos anúncios. Nenhum dado de pagamento passa por aqui: a compra acontece na Kiwify.</p>
+  </div>
+</footer>
+
+<div class="barra" aria-hidden="true">
+  <span id="barra-txt">Planilha + kit por R$ 27</span>
+  <a class="botao" data-checkout href="#oferta" tabindex="-1">Quero</a>
+</div>
+
+<script>
+(function () {
+  var cfg = window.CONFIG;
+  var $ = function (s) { return document.querySelector(s); };
+  var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var brl = function (v) { return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); };
+  var curto = function (v) { return "R$ " + (Math.round(v) === v ? v : v.toFixed(2).replace(".", ",")); };
+  var fim = new Date(cfg.FIM_LANCAMENTO).getTime();
+  var dataFim = new Date(fim);
+  var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+  var prazoTxt = pad(dataFim.getDate()) + "/" + pad(dataFim.getMonth() + 1);
+
+  // ---------------------------------------------------------- oferta (lançamento x preço normal)
+  var emLancamento = function () { return isFinite(fim) && Date.now() < fim; };
+  var aplicado = null;
+
+  function aplicaOferta() {
+    var lanc = emLancamento();
+    if (aplicado === lanc) return;
+    aplicado = lanc;
+    var preco = lanc ? cfg.PRECO_LANCAMENTO : cfg.PRECO_DEPOIS;
+    $$("[data-preco]").forEach(function (e) { e.textContent = curto(preco); });
+    $$("[data-preco-num]").forEach(function (e) { e.textContent = String(preco); });
+    $$("[data-preco-depois]").forEach(function (e) { e.textContent = curto(cfg.PRECO_DEPOIS); });
+    $$("[data-prazo]").forEach(function (e) { e.textContent = prazoTxt; });
+    $$("[data-cta]").forEach(function (e) {
+      e.textContent = lanc ? "Quero a planilha + kit por " + curto(preco) : "Quero a planilha por " + curto(preco);
+    });
+    $$("[data-bonus]").forEach(function (e) { e.classList.toggle("oculto", !lanc); });
+    $("#faixa").classList.toggle("oculto", !lanc);
+    $("#barra-txt").textContent = lanc ? "Planilha + kit por " + curto(preco) : "Planilha por " + curto(preco);
+
+    var url = (lanc ? cfg.CHECKOUT_URL : (cfg.CHECKOUT_URL_DEPOIS || cfg.CHECKOUT_URL) || "").trim();
+    var ok = /^https?:\/\//.test(url);
+    if (ok && location.search) {
+      var u = new URL(url);
+      new URLSearchParams(location.search).forEach(function (v, k) {
+        if (/^(utm_|src|sck|fbclid)/.test(k) && !u.searchParams.has(k)) u.searchParams.set(k, v);
+      });
+      url = u.toString();
+    }
+    $$("[data-checkout]").forEach(function (a) { a.href = ok ? url : "#oferta"; });
+    if (window.fbq) fbq("track", "ViewContent", { content_name: "Cozinha no Lucro", value: preco, currency: "BRL" });
+  }
+
+  // ---------------------------------------------------------- contador real até FIM_LANCAMENTO
+  function tick() {
+    aplicaOferta();
+    if (!emLancamento()) return;
+    var r = Math.max(0, Math.floor((fim - Date.now()) / 1000));
+    var d = Math.floor(r / 86400), h = Math.floor(r % 86400 / 3600), m = Math.floor(r % 3600 / 60), s = r % 60;
+    var txt = (d ? d + "d " : "") + pad(h) + "h " + pad(m) + "m " + pad(s) + "s";
+    var faixa = $("#faixa");
+    var ultimasHoras = r <= 86400, ultimosMin = r <= 3600;
+    faixa.classList.toggle("final", ultimasHoras);
+    faixa.classList.toggle("minutos", ultimosMin);
+    faixa.innerHTML = (ultimosMin ? "Últimos minutos do preço de lançamento: " :
+      ultimasHoras ? "Últimas horas do preço de lançamento: " :
+      "Preço de lançamento: " + curto(cfg.PRECO_LANCAMENTO) + " + kit de bônus grátis. Termina em ") + "<b>" + txt + "</b>";
+    var map = { d: d, h: h, m: m, s: s };
+    $$("[data-cd]").forEach(function (e) { e.textContent = pad(map[e.getAttribute("data-cd")]); });
+    if (ultimasHoras) $("#barra-txt").textContent = (ultimosMin ? "Últimos minutos: " : "Últimas horas: ") + curto(cfg.PRECO_LANCAMENTO);
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // ---------------------------------------------------------- calculadora
+  var num = function (id) {
+    var v = parseFloat(String($(id).value).replace(/\s/g, "").replace(/\.(?=\d{3})/g, "").replace(",", "."));
+    return isFinite(v) ? v : 0;
+  };
+  var usou = false;
+  function calcula(ev) {
+    var preco = num("#c-preco"), ingr = num("#c-ingr"), min = num("#c-min"), hora = num("#c-hora");
+    var taxa = parseFloat($("#c-canal").value);
+    var extras = 1.11, margem = 0.20;
+    var custo = ingr + (min / 60) * hora + extras;
+    var lucro = preco * (1 - taxa) - custo;
+    var certo = custo / (1 - taxa - margem);
+    var el = $("#r-lucro");
+    el.textContent = brl(lucro);
+    el.classList.toggle("ruim", lucro < preco * 0.1);
+    el.classList.toggle("bom", lucro >= preco * margem);
+    $("#r-msg").textContent = preco <= 0 ? "Coloque o preço que você cobra." :
+      lucro < 0 ? "Você está pagando para trabalhar: perde " + brl(-lucro) + " em cada unidade." :
+      lucro < preco * margem ? "Sobra pouco. O ideal é deixar pelo menos 20% do preço como lucro." :
+      "Bom sinal! A planilha ajuda a manter assim quando os ingredientes subirem.";
+    $("#r-certo").textContent = brl(certo);
+    var ganho = (certo - preco) * (1 - taxa);
+    $("#r-dif").textContent = ganho > 0.005 ? "Cobrando o preço certo, ficam " + brl(ganho) + " a mais por unidade no seu bolso." :
+      "Seu preço já cobre os custos e o lucro.";
+    if (ev && !usou) { usou = true; if (window.fbq) fbq("trackCustom", "UsouCalculadora"); }
+  }
+  $$("#calc input, #calc select").forEach(function (i) { i.addEventListener("input", calcula); });
+  calcula();
+
+  // ---------------------------------------------------------- depoimentos reais (só se houver)
+  if (cfg.DEPOIMENTOS && cfg.DEPOIMENTOS.length) {
+    var lista = $("#lista-depos");
+    cfg.DEPOIMENTOS.forEach(function (d) {
+      var b = document.createElement("blockquote");
+      b.className = "depo";
+      var p = document.createElement("p"); p.textContent = "“" + d.texto + "”";
+      var f = document.createElement("footer"); f.textContent = d.nome;
+      if (d.negocio) { var sp = document.createElement("span"); sp.textContent = ", " + d.negocio; f.appendChild(sp); }
+      b.appendChild(p); b.appendChild(f); lista.appendChild(b);
+    });
+    $("#depoimentos").classList.remove("oculto");
+  }
+
+  // ---------------------------------------------------------- WhatsApp e e-mail
+  var zap = (cfg.WHATSAPP || "").replace(/\D/g, "");
+  if (zap.length >= 12) {
+    var a = $("#zap");
+    a.href = "https://wa.me/" + zap + "?text=" + encodeURIComponent("Oi! Tenho uma dúvida sobre a planilha Cozinha no Lucro.");
+    a.classList.remove("oculto");
+    a.addEventListener("click", function () { if (window.fbq) fbq("trackCustom", "CliqueWhatsApp"); });
+  }
+  $$("[data-email]").forEach(function (a) { a.href = "mailto:" + cfg.EMAIL_SUPORTE; a.textContent = cfg.EMAIL_SUPORTE; });
+
+  // ---------------------------------------------------------- eventos de interesse para o Pixel
+  $$("[data-checkout]").forEach(function (a) {
+    a.addEventListener("click", function () { if (window.fbq) fbq("trackCustom", "CliqueComprar"); });
+  });
+  var rolou = false;
+  window.addEventListener("scroll", function () {
+    if (rolou) return;
+    var h = document.documentElement;
+    if ((h.scrollTop + innerHeight) / h.scrollHeight >= 0.5) { rolou = true; if (window.fbq) fbq("trackCustom", "Rolou50"); }
+  }, { passive: true });
+  setTimeout(function () { if (window.fbq) fbq("trackCustom", "Ficou30s"); }, 30000);
+
+  // ---------------------------------------------------------- barra fixa no celular
+  var barra = $(".barra");
+  if ("IntersectionObserver" in window) {
+    var foraTopo = false, naOferta = false;
+    var atualiza = function () { barra.classList.toggle("visivel", foraTopo && !naOferta); };
+    new IntersectionObserver(function (e) { foraTopo = !e[0].isIntersecting; atualiza(); }).observe($(".topo"));
+    new IntersectionObserver(function (e) { naOferta = e[0].isIntersecting; atualiza(); }).observe($("#oferta"));
+  }
+
+  // ---------------------------------------------------------- vídeo toca sem som quando aparece
+  var v = $(".celular video");
+  var calmo = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (v && !calmo && "IntersectionObserver" in window) {
+    new IntersectionObserver(function (e) {
+      if (e[0].isIntersecting) { v.play().catch(function () {}); } else { v.pause(); }
+    }, { threshold: 0.5 }).observe(v);
+  }
+})();
+</script>
+</body>
+</html>
